@@ -1,66 +1,64 @@
 #include <Arduino.h>
 #include "coro.h"
 #include <cstddef>
+#include <math.h>
 
-template <std::size_t Duration, int Pin>
-void blinky_coro(Coroutine* self, Coroutine* caller) {
-	Serial.print("Starting 'blinky_coro<");
-	Serial.print(Duration);
-	Serial.print(", ");
+static std::size_t pulse_width = 0u;
+
+template <int Pin, std::size_t Period>
+static void pwm_coro() {
+	Serial.print("Starting pwm_coro<");
 	Serial.print(Pin);
-	Serial.println(">()'.");
+	Serial.print(", ");
+	Serial.print(Period);
+	Serial.println(">()");
+	std::size_t pulse_start = micros();
 	pinMode(Pin, OUTPUT);
-	int logic_level = LOW;
-	self->yield(caller);
-	digitalWrite(Pin, logic_level);
+	bool pulse_state = false;
 	for(;;) {
-		auto start = millis();
-		auto now = start;
-		while(static_cast<std::size_t>(now - start) < Duration) {
-			self->yield_to(caller);
-			now = millis();
+		ino::coro::yield_to<ino::coro::main_coro>();
+		auto now = micros();
+		auto current_width = pulse_start - now;
+		if(pulse_state) {
+			if(current_width > pulse_width) {
+				digitalWrite(Pin, LOW);
+			}
+		} else {
+			pulse_start += Period;
+			if(current_width >= Period) {
+				digitalWrite(Pin, HIGH);
+			}
 		}
-		switch(logic_level) {
-		case LOW:
-			logic_level = HIGH;
-			break;
-		case HIGH:
-			logic_level = LOW;
-			break;
-		}
-		digitalWrite(Pin, logic_level);
 	}
 }
 
-static Coroutine* coroutines[9] = {nullptr};
-
 void setup() {
 	Serial.begin(115200);
-	Serial.println("Starting...");
+	Serial.println("Initializing...");
 	Serial.flush();
-	coroutines[0] = ino::coro::start_coroutine<blinky_coro<   50,  2>>();
-	coroutines[1] = ino::coro::start_coroutine<blinky_coro<  100,  3>>();
-	coroutines[2] = ino::coro::start_coroutine<blinky_coro<  200,  4>>();
-	coroutines[3] = ino::coro::start_coroutine<blinky_coro<  400,  5>>();
-	coroutines[4] = ino::coro::start_coroutine<blinky_coro<  800,  6>>();
-	coroutines[5] = ino::coro::start_coroutine<blinky_coro< 1600,  7>>();
-	coroutines[6] = ino::coro::start_coroutine<blinky_coro< 3200,  8>>();
-	coroutines[7] = ino::coro::start_coroutine<blinky_coro< 6400,  9>>();
-	coroutines[8] = ino::coro::start_coroutine<blinky_coro<12800, 10>>();
+	pinMode(3, OUTPUT);
+	// ino::coro::start<pwm_coro<4, 20000>>();
 }
 
 void loop() {
+	constexpr auto period = 2000ul;
+	constexpr auto pulse_max = 240;
+	constexpr auto pulse_min = 60;
+	auto start_time = millis();
 	for(;;) {
-		auto start = millis();
-		for(Coroutine* coro: coroutines) {
-			ino::coro::resume_coro(coro);
+		auto now = millis();
+		pulse_width = 8u + ((now - start_time) * (22)) / period;
+		Serial.println(pulse_width);
+		analogWrite(3, pulse_width);
+		if(now - start_time > 2000u) {
+			start_time = now;
 		}
-		auto stop = millis();
-		Serial.print("Executed ");
-		Serial.print(sizeof(coroutines) / sizeof(coroutines[0]));
-		Serial.print(" coroutines in ");
-		Serial.print(stop - start);
-		Serial.println(" milliseconds.");
+		// auto t = micros();
+		// ino::coro::yield_to<pwm_coro<4, 20000>>();
+		// t = micros() - t;
+		// Serial.print("Completed coroutine in ");
+		// Serial.print(t);
+		// Serial.println(" microseconds.");
 	}
 }
 
@@ -73,8 +71,7 @@ int main(void)
 #endif
 	
 	setup();
-	Serial.println("setup done!");
-    
+ 	
 	for (;;) {
 		loop();
 		if (serialEventRun) serialEventRun();

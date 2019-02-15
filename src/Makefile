@@ -4,7 +4,7 @@ AR=avr-ar
 
 DEVICE=__AVR_ATmega328P__
 
-CXXFLAGS=-mmcu=atmega328p -std=c++17 -O2 -fmax-errors=5 -Wall -Wextra -DF_CPU=16000000L -DARDUINO=105 -ffunction-sections -fdata-sections -w -I./../arduino/ -I./ArduinoSTL/src
+CXXFLAGS=-mmcu=atmega328p -std=c++17 -Os -fmax-errors=5 -Wall -Wextra -DF_CPU=16000000L -DARDUINO=105 -ffunction-sections -fdata-sections -w -I./../arduino/ -I./ArduinoSTL/src
 
 OBJECTS=main.o coro.o
 
