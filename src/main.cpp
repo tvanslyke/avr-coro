@@ -1,64 +1,65 @@
 #include <Arduino.h>
-#include "coro.h"
 #include <cstddef>
-#include <math.h>
+#include "coro.h"
 
-static std::size_t pulse_width = 0u;
+using namespace tim::coro;
 
-template <int Pin, std::size_t Period>
-static void pwm_coro() {
-	Serial.print("Starting pwm_coro<");
+template <int Pin>
+void button_press_coro(Coroutine& self) {
+	Serial.print("Stating button_press_coro<");
 	Serial.print(Pin);
-	Serial.print(", ");
-	Serial.print(Period);
-	Serial.println(">()");
-	std::size_t pulse_start = micros();
-	pinMode(Pin, OUTPUT);
-	bool pulse_state = false;
+	Serial.println(">().");
+	Serial.flush();
+	pinMode(Pin, INPUT);
+	yield_to(Coroutine::main);
 	for(;;) {
-		ino::coro::yield_to<ino::coro::main_coro>();
-		auto now = micros();
-		auto current_width = pulse_start - now;
-		if(pulse_state) {
-			if(current_width > pulse_width) {
-				digitalWrite(Pin, LOW);
-			}
-		} else {
-			pulse_start += Period;
-			if(current_width >= Period) {
-				digitalWrite(Pin, HIGH);
-			}
+		if(digitalRead(Pin) == LOW) {
+			auto start = micros();
+			do {
+				yield_to(Coroutine::main);
+			} while(digitalRead(Pin) == LOW);
+			auto duration = micros() - start;
+			Serial.print("button_press_coro<");
+			Serial.print(Pin);
+			Serial.print(">():");
+			Serial.print("Button pressed for ");
+			Serial.print(duration);
+			Serial.println(" microseconds.");
 		}
+		yield_to(Coroutine::main);
 	}
 }
+
+UniqueCoroutine<void (*)(Coroutine&), 128u> pin2_button_coro = UniqueCoroutine{button_press_coro<2>};
+UniqueCoroutine<void (*)(Coroutine&), 128u> pin3_button_coro = UniqueCoroutine{button_press_coro<3>};
 
 void setup() {
 	Serial.begin(115200);
 	Serial.println("Initializing...");
 	Serial.flush();
-	pinMode(3, OUTPUT);
-	// ino::coro::start<pwm_coro<4, 20000>>();
+	pinMode(13, OUTPUT);
+	digitalWrite(13, LOW);
+	pin2_button_coro.start();
+	pin3_button_coro.start();
 }
 
 void loop() {
-	constexpr auto period = 2000ul;
-	constexpr auto pulse_max = 240;
-	constexpr auto pulse_min = 60;
-	auto start_time = millis();
+	Serial.println("Starting loop()");
+	Serial.flush();
+
 	for(;;) {
-		auto now = millis();
-		pulse_width = 8u + ((now - start_time) * (22)) / period;
-		Serial.println(pulse_width);
-		analogWrite(3, pulse_width);
-		if(now - start_time > 2000u) {
-			start_time = now;
+		auto start = micros();
+		digitalWrite(13, HIGH);
+		while(micros() - start < 500000ul) {
+			yield_to(pin2_button_coro);
+			yield_to(pin3_button_coro);
 		}
-		// auto t = micros();
-		// ino::coro::yield_to<pwm_coro<4, 20000>>();
-		// t = micros() - t;
-		// Serial.print("Completed coroutine in ");
-		// Serial.print(t);
-		// Serial.println(" microseconds.");
+		start = micros();
+		digitalWrite(13, LOW);
+		while(micros() - start < 500000ul) {
+			yield_to(pin2_button_coro);
+			yield_to(pin3_button_coro);
+		}
 	}
 }
 

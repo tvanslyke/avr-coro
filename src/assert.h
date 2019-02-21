@@ -3,10 +3,10 @@
 
 #include <Arduino.h>
 
-namespace ino {
+namespace ino::detail {
 
 [[noreturn]]
-void assert_fail(const char* assertion, const char* file, long linenumber) {
+inline void assert_fail(const char* assertion, const char* file, long linenumber) {
 	Serial.print(file);
 	Serial.print(" line ");
 	Serial.println(linenumber);
@@ -19,13 +19,13 @@ void assert_fail(const char* assertion, const char* file, long linenumber) {
 	}
 }
 
-} /* namespace ino */
+} /* namespace ino::detail */
 
 #ifdef NDEBUG
 # define assert(x) (void)(x)
 #else
 # define assert(x) \
-	(x) ? (void)0 : assert_fail(#x, __FILE__, __LINE__)
+	(x) ? (void)0 : ino::detail::assert_fail(#x, __FILE__, __LINE__)
 #endif
 	
 #define UNREACHABLE() \
