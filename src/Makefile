@@ -4,28 +4,24 @@ AR=avr-ar
 
 DEVICE=__AVR_ATmega328P__
 
-CXXFLAGS=-mmcu=atmega328p -std=c++17 -Os -fmax-errors=5 -Wall -Wextra -DF_CPU=16000000L -DARDUINO=105 -ffunction-sections -fdata-sections -w -I./../arduino/ -I./ArduinoSTL/src
-
-OBJECTS=main.o coro.o
-
-firmware.elf: $(OBJECTS) ./../arduino/libarduino.a
-	$(CXX) $(OBJECTS) ./../arduino/libarduino.a $(CXXFLAGS) -o firmware.elf
-
-main.o: main.cpp coro.h
-	$(CXX) main.cpp -c $(CXXFLAGS) 
-
-coro.o: coro.cpp coro.h
-	$(CXX) coro.cpp -c $(CXXFLAGS) 
-
-coro_asm:
-	$(CXX) coro.cpp -c -S -o - $(CXXFLAGS) | c++filt | grep -vE '\s+\.'
+CXXFLAGS=-mmcu=atmega328p -std=c++17 -O2 -fmax-errors=5 -Wall -Wextra -DF_CPU=16000000L -DARDUINO=105 -ffunction-sections -fdata-sections -w -I./../arduino/ -I./ArduinoSTL/src -I./
 
 
+libtimcoro.a: Coroutine.o
+	$(AR) rcs libtimcoro.a Coroutine.o
 
-./../arduino/libarduino.a:
-	cd ./../arduino && $(MAKE)
+Coroutine.o: Coroutine.cpp Coroutine.h
+	$(CXX) Coroutine.cpp -c $(CXXFLAGS)
+
+example: coro.h coro.o
+	$(CXX) example.cpp Coroutine.o $(CXXFLAGS) -o example
+
+simple_scheduler_example: coro.h coro.o
+	$(CXX) simple_scheduler_example.cpp Coroutine.o $(CXXFLAGS) -o simple_scheduler_example
+
 
 clean:
 	rm ./*.o
-	rm firmware.elf
+	rm example
+	rm simple_scheduler_example
 

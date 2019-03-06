@@ -1,34 +1,34 @@
-#ifndef INO_ASSERT_H
-#define INO_ASSERT_H
+#ifndef TIM_ASSERT_H
+#define TIM_ASSERT_H
 
 #include <Arduino.h>
 
-namespace ino::detail {
+namespace tim::detail {
 
 [[noreturn]]
 inline void assert_fail(const char* assertion, const char* file, long linenumber) {
-	Serial.print(file);
-	Serial.print(" line ");
-	Serial.println(linenumber);
-	Serial.print("Assertion: \"");
-	Serial.print(assertion);
-	Serial.println("\" failed.");
+	printf(file);
+	printf(" line ");
+	printf("%ld", linenumber);
+	printf("\n");
+	printf("Assertion: \"");
+	printf(assertion);
+	printf("\" failed.");
 	volatile unsigned n = 0;
 	for(;;) {
 		++n;
 	}
 }
 
-} /* namespace ino::detail */
+} /* namespace tim::detail */
 
-#ifdef NDEBUG
-# define assert(x) (void)(x)
-#else
-# define assert(x) \
-	(x) ? (void)0 : ino::detail::assert_fail(#x, __FILE__, __LINE__)
+#ifndef assert
+# ifdef defined(NDEBUG) || defined(TIM_CORO_NO_ASSERT)
+#  define assert(x) (void)(x)
+# else
+#  define assert(x) \
+         (x) ? (void)0 : tim::detail::assert_fail(#x, __FILE__, __LINE__)
+# endif
 #endif
 	
-#define UNREACHABLE() \
-	ASSERT(!"Unreachable code path.")
-
-#endif /* INO_ASSERT_H */
+#endif /* TIM_ASSERT_H */
