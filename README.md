@@ -67,7 +67,7 @@ Suspend the currently-running coroutine and resume the `other` coroutine with a 
 Suspend the currently-running coroutine and resume the `other` coroutine with a `Continue` signal.  It is **not** safe to call this function when `other` is the currently-running coroutine.  
 
 #### Free Function `void terminate(Coroutine& other)` 
-Suspend the currently-running coroutine and resume the `other` coroutine with a `Terminate` signal.  This is equivaent to calling `other.end()`. It is **not** safe to call this function when `other` is the currently-running coroutine.
+Suspend the currently-running coroutine and resume the `other` coroutine with a `Terminate` signal.  This is equivalent to calling `other.end()`. It is **not** safe to call this function when `other` is the currently-running coroutine.
 
 #### Static Data Member `Coroutine Coroutine::main`
 `Coroutine::main` is the `Coroutine` object corresponding to the `main` coroutine.  The main coroutine is special in that it does not need to have it's stack manually allocated and that it is always resumable in correct programs.
