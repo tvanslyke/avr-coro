@@ -126,9 +126,13 @@ static volatile unsigned long fib_value = 0u;
 // Fibonacci generator coroutine.
 static void generate_fib_numbers(Coroutine& self) {
 	fib_value = 1u;
-	yield_to(Coroutine::main);
+	if(yield_to(Coroutine::main) == YieldResult::Terminate) {
+		return;
+	}
 	fib_value = 1u;
-	yield_to(Coroutine::main);
+	if(yield_to(Coroutine::main) == YieldResult::Terminate) {
+		return;
+	}
 	unsigned long prev = 1u;
 	unsigned long curr = 1u;
 	for(;;) {
@@ -136,7 +140,9 @@ static void generate_fib_numbers(Coroutine& self) {
 		curr = prev + curr;
 		prev = save;
 		fib_value = curr;
-		yield_to(Coroutine::main);
+		if(yield_to(Coroutine::main) == YieldResult::Terminate) {
+			return;
+		}
 	}
 }
 // Actual coroutine object.
@@ -144,9 +150,11 @@ static auto fib_generator = BasicCoroutine{generate_fib_numbers};
 
 // Fibonacci printer coroutine.
 static void print_fib_numbers(Coroutine& self) {
-	for(unsigned long i = 0u;; ++i) {
-		printf("fib(%lu) = %lu\n", i, fib_value);
-		yield_to(Coroutine::main);
+	for(uint16_t i = 0u;; ++i) {
+		printf("fib(%d) = %lu\n", static_cast<int>(i), fib_value);
+		if(yield_to(Coroutine::main) == YieldResult::Terminate) {
+			return;
+		}
 	}
 }
 // Actual coroutine object.

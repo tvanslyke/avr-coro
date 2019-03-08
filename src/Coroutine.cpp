@@ -56,6 +56,9 @@ bool Coroutine::is_done() const {
 
 YieldResult yield_fast_to(Coroutine& coro) {
 	assert(Coroutine::currently_running != &coro and "Cannot call yield_fast_to() on the currently-running coroutine.");
+	if(coro.is_done()) {
+		return YieldResult::Terminated;
+	}
 	jmp_buf context;
 	auto save = Coroutine::currently_running;
 	Coroutine::currently_running->context_ = &context;
