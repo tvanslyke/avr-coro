@@ -132,8 +132,8 @@ protected:
 	template <class Callable>
 	friend void detail::start_coroutine(Coroutine* coro, Callable* callable);
 
-	friend YieldResult yield_fast_to(Coroutine&);
-	friend YieldResult yield_to(Coroutine&);
+	friend [[nodiscard]] YieldResult yield_fast_to(Coroutine&);
+	friend [[nodiscard]] YieldResult yield_to(Coroutine&);
 	friend void terminate(Coroutine&);
 
 protected:
@@ -161,16 +161,21 @@ void start_coroutine(Coroutine* caller, Callable* callable) {
 	assert(Coroutine::currently_running != caller);
 	// Immediately yield to the caller.  The first time this coroutine
 	// is resumed, we jump right into the callable.
-	yield_to(*caller);
-	// Start the actual coroutine.
-	(*callable)(*Coroutine::currently_running);
+	switch(yield_to(*caller)) {
+	case YieldResult::Continue:
+		// Start the actual coroutine.
+		(*callable)(*Coroutine::currently_running);
+		[[fallthrough]]
+	case YieldResult::Terminate:
+	default:
+		(void)0;
+	}
 	// The coroutine has finished executing, clean up and then jump to the caller.
-	// Note that the caller in this case is whoever is trying to terminate this 
-	// coroutine.
+	// Note that the caller in this case is whomever lsat resumed this coroutine.  
 	jmp_buf* caller_ctx = Coroutine::currently_running->context_;
 	assert(caller_ctx and "Coroutine terminated with no caller context to yield to.");
 	Coroutine::currently_running->context_ = nullptr;
-	// Jump back to whoever resumed this coroutine with the 'Terminated' status.
+	// Jump back to whomever last resumed this coroutine.
 	longjmp(*caller_ctx, static_cast<int>(YieldResult::Terminated));
 }
 
@@ -185,10 +190,7 @@ struct stack_size {
 };
 
 template <size_t N>
-using stack_size_t = stack_size<N>;
-
-template <size_t N>
-inline constexpr auto stack_size_v = stack_size_t<N>{};
+inline constexpr auto stack_size_v = stack_size<N>{};
 
 /**
  * Coroutine type that invokes an object of type 'Callable' with
@@ -214,7 +216,7 @@ struct BasicCoroutine: Coroutine {
 	/**
 	 * Constructor to support deducing StackSz with CTAD deduction guides.
 	 */
-	BasicCoroutine(Callable callable, stack_size_t<StackSz>):
+	BasicCoroutine(Callable callable, stack_size<StackSz>):
 		Coroutine(BasicCoroutine::start_function),
 		callable_(callable),
 		stack_{0}
@@ -228,13 +230,13 @@ struct BasicCoroutine: Coroutine {
 
 
 private:
-	void start() {
+	void start_coroutine() {
 		assert(this->context_);
 		this->initialize(callable_, &stack_[StackSz - 1u]);
 	}
 
 	static void start_function(Coroutine& self) {
-		static_cast<BasicCoroutine&>(self).start();
+		static_cast<BasicCoroutine&>(self).start_coroutine();
 	}
 
 	// Callable object that is invoked upon starting.
@@ -247,13 +249,13 @@ private:
 /** Deduction guides for BasicCoroutine. */
 
 template <class Callable, size_t StackSz>
-BasicCoroutine(const Callable&, stack_size_t<StackSz>) -> BasicCoroutine<Callable, StackSz>;
+BasicCoroutine(const Callable&, stack_size<StackSz>) -> BasicCoroutine<Callable, StackSz>;
 
 template <class Callable>
 BasicCoroutine(const Callable&) -> BasicCoroutine<Callable, 128u>;
 
 template <size_t StackSz>
-BasicCoroutine(void (Coroutine&), stack_size_t<StackSz>) -> BasicCoroutine<void (*)(Coroutine&), StackSz>;
+BasicCoroutine(void (Coroutine&), stack_size<StackSz>) -> BasicCoroutine<void (*)(Coroutine&), StackSz>;
 
 BasicCoroutine(void (Coroutine&)) -> BasicCoroutine<void (*)(Coroutine&), 128u>;
 

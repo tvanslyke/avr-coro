@@ -13,10 +13,10 @@ libtimcoro.a: Coroutine.o
 Coroutine.o: Coroutine.cpp Coroutine.h
 	$(CXX) Coroutine.cpp -c $(CXXFLAGS)
 
-example: coro.h coro.o
+example: Coroutine.h Coroutine.o
 	$(CXX) example.cpp Coroutine.o $(CXXFLAGS) -o example
 
-simple_scheduler_example: coro.h coro.o
+simple_scheduler_example: Coroutine.h Coroutine.o
 	$(CXX) simple_scheduler_example.cpp Coroutine.o $(CXXFLAGS) -o simple_scheduler_example
 
 
