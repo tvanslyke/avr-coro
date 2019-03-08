@@ -18,7 +18,7 @@ This library optimizes for the use case where a static number of coroutines will
 
 
 ## Static Library `libtimcoro.a`
-The provided `libtimcoro.a` is compiled from `Coroutine.cpp` using `avr-g++-8` with optimization level `-O2` and no debug information (but with assertions enabled).  This library can be linked with in place of adding `Coroutine.cpp` to your build.  To build `libtimcoro.a` with different compilers/parameters, `src/Makefile` should be modified as needed.
+The provided `libtimcoro.a` under `release/` is compiled from `Coroutine.cpp` using `avr-g++-8` with optimization level `-O2` and no debug information (but with assertions enabled).  This library can be linked with in place of adding `Coroutine.cpp` to your build.  To build `libtimcoro.a` with different compilers/parameters, `src/Makefile` should be modified as needed.
 
 ## Headers
 The `Coroutine.h` header declares the types and functions provided by the library.  The `assert.h` and `type_traits.h` headers are private to the library but are included by `Coroutine.h`.
@@ -108,6 +108,9 @@ The template variable declaration is provided as a convenience:
 template <size_t N>
 inline constexpr auto stack_size_v = stack_size<N>{};
 ```
+
+### Macro `TIM_CORO_NO_ASSERT`
+Define this macro (or standard macro `NDEBUG`) before including `Coroutine.h` to disable assertions in `Coroutine.h`.  Note that the provided `libtimcoro.a` is compiled with assertions *enabled*.
 
 # Requirements
 Compiling this library requires a g++-compatible compiler that supports GCC's [extended asm statement](gcc.gnu.org/onlinedocs/gcc/Extended-Asm.html) and C++17.
