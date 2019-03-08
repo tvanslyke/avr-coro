@@ -150,12 +150,16 @@ static auto fib_generator = BasicCoroutine{generate_fib_numbers};
 
 // Fibonacci printer coroutine.
 static void print_fib_numbers(Coroutine& self) {
-	for(uint16_t i = 0u;; ++i) {
+	for(uint16_t i = 0u; i < 65536u; ++i) {
 		printf("fib(%d) = %lu\n", static_cast<int>(i), fib_value);
 		if(yield_to(Coroutine::main) == YieldResult::Terminate) {
 			return;
 		}
 	}
+	// For demonstration purposes, terminate the generator coroutine.
+	terminate(fib_generator);
+	// Terminate the fib_printer coroutine.
+	return;
 }
 // Actual coroutine object.
 static auto fib_printer = BasicCoroutine{print_fib_numbers};
