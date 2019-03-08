@@ -115,7 +115,7 @@ inline constexpr auto stack_size_v = stack_size<N>{};
 Define this macro (or standard macro `NDEBUG`) before including `Coroutine.h` to disable assertions in `Coroutine.h`.  Note that the provided `libtimcoro.a` is compiled with assertions *enabled*.
 
 # Requirements
-Compiling this library requires a g++-compatible compiler that supports GCC's [extended asm statement](gcc.gnu.org/onlinedocs/gcc/Extended-Asm.html) and C++17.
+Compiling this library requires a g++-compatible compiler that supports GCC's [extended asm statement](https://gcc.gnu.org/onlinedocs/gcc/Extended-Asm.html) and C++17.
 Including the `Coroutine.h` header requires a C++ compiler that supports C++17's [CTAD deduction guides](https://en.cppreference.com/w/cpp/language/class_template_argument_deduction) and [inline variable declarations](https://en.cppreference.com/w/cpp/language/inline).  
 
 # License
