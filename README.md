@@ -81,7 +81,9 @@ The `Callable` parameter specifies the type of the callable object to call to st
 
 The `StackSize` parameter specifies the stack size, in bytes, to allocate for the Coroutine object.  Note that the coroutine's stack is a byte array living in the `BasicCoroutine` object itself; dynamic allocation of the coroutine stack is not supported.
 
-#### Constructor `BasicCoroutine<Callable, StackSize>::BasicCoroutine(Callable, stack_size_t<StackSize>)`
+Note that template parameters `Callable` and `StackSize` are deducible from all of `BasicCoroutine` constructors.
+
+#### Constructor `BasicCoroutine<Callable, StackSize>::BasicCoroutine(Callable, stack_size<StackSize>)`
 Construct a BasicCoroutine object from the callable object and given stack size.  This constructor has deduction guides to allow creating a new BasicCoroutine object without specifying the 'Callable' type and 'StackSize' explicitly:
 
 ```c++
