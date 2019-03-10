@@ -3,7 +3,7 @@ CXX=avr-g++-8
 AR=avr-ar
 
 
-CXXFLAGS=-std=c++17 -O2 -fmax-errors=5 -Wall -Wextra -DF_CPU=16000000L -DARDUINO=105 -ffunction-sections -fdata-sections -w -I./../arduino/ -I./ArduinoSTL/src -I./
+CXXFLAGS=-std=c++17 -O2 -fmax-errors=5 -Wall -Wextra -ffunction-sections -fdata-sections -w -I./
 
 
 libtimcoro.a: Coroutine.o

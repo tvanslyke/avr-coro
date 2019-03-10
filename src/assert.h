@@ -11,7 +11,7 @@
 #ifndef TIM_ASSERT_H
 #define TIM_ASSERT_H
 
-#include <Arduino.h>
+#include <stdio.h>
 
 namespace tim::detail {
 
